@@ -1,0 +1,4 @@
+Middlewares/stedgeai-lib/Npu/ll_aton/ll_aton_osal_threadx.o: \
+ /home/ck/Desktop/Workspace/STM32CubeIDE\ Workspace/STM32N6570_USBD_CDC_FACE_DETECT/Middlewares/ST/stedgeai-lib/Npu/ll_aton/ll_aton_osal_threadx.c \
+ /home/ck/Desktop/Workspace/STM32CubeIDE\ Workspace/STM32N6570_USBD_CDC_FACE_DETECT/Middlewares/ST/stedgeai-lib/Npu/ll_aton/ll_aton_config.h
+/home/ck/Desktop/Workspace/STM32CubeIDE\ Workspace/STM32N6570_USBD_CDC_FACE_DETECT/Middlewares/ST/stedgeai-lib/Npu/ll_aton/ll_aton_config.h:

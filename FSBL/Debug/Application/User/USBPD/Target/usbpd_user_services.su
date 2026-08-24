@@ -1,0 +1,5 @@
+/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/FSBL/Application/User/USBPD/Target/usbpd_user_services.c:208:6:USBPD_USER_SERV_StoreSRCPDO	32	static
+/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/FSBL/Application/User/USBPD/Target/usbpd_user_services.c:231:6:USBPD_USER_SERV_EvaluateCapa	120	static
+/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/FSBL/Application/User/USBPD/Target/usbpd_user_services.c:301:17:USER_SERV_SNK_EvaluateMatchWithSRCPDO	112	static
+/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/FSBL/Application/User/USBPD/Target/usbpd_user_services.c:481:17:USER_SERV_FindVoltageIndex	72	static
+/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/FSBL/Application/User/USBPD/Target/usbpd_user_services.c:621:13:USER_SERV_SNK_BuildRDOfromSelectedPDO	88	static

@@ -1,0 +1,2 @@
+/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/Middlewares/ST/stm32-mw-camera/sensors/ov5640/ov5640_reg.c:45:9:ov5640_read_reg	32	static
+/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/Middlewares/ST/stm32-mw-camera/sensors/ov5640/ov5640_reg.c:58:9:ov5640_write_reg	32	static
