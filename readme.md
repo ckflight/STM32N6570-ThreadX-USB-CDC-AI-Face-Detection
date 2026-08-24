@@ -1,5 +1,10 @@
 # STM32N6 AI – Model Zoo Deployment
 
+<img width="798" height="525" alt="Image" src="https://github.com/user-attachments/assets/221e057f-b8b8-4978-bee1-7cc925009b4d" />
+
+<img width="1020" height="884" alt="Image" src="https://github.com/user-attachments/assets/d05c2f7f-b79a-4371-bc12-f8ad904100da" />
+
+
 ## Environment
 
 Required tools:
