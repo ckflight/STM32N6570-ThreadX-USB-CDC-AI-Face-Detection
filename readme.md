@@ -52,7 +52,7 @@ Application project:
 application_code/face_detection/STM32N6/
 ```
 
-Model Zoo Services updates this project with model-specific generated files.
+Model Zoo Services does not generate the complete firmware from scratch. It updates this reference STM32N6 project with model-specific generated files.
 
 ## 3. Create Deployment Configuration
 
@@ -65,7 +65,7 @@ cp config_file_examples/deployment_n6_blazeface_config.yaml user_config.yaml
 
 `stm32ai_main.py` uses `user_config.yaml` as its active configuration.
 
-Set the local tool paths in `user_config.yaml`:
+Set the local tool paths:
 
 ```yaml
 tools:
@@ -88,16 +88,16 @@ deployment:
     board: STM32N6570-DK
 ```
 
-## 4. Deploy
+## 4. Generate / Deploy
 
-Connect the STM32N6570-DK and run:
+Run:
 
 ```bash
 cd ~/stm32ai-modelzoo-services/face_detection
 python3.12 stm32ai_main.py
 ```
 
-Deployment flow:
+Flow:
 
 ```text
 Pretrained Model
@@ -106,7 +106,7 @@ Model Zoo Services
       ↓
 STEdgeAI Core
       ↓
-Generate N6 / Neural-ART files
+Generate Neural-ART / NPU files
       ↓
 Update STM32N6 C Project
       ↓
@@ -115,10 +115,84 @@ CubeIDE Build
 STM32N6570-DK
 ```
 
-Generated content includes the network C files, model-specific headers and Neural-ART/NPU binary data.
+The board is required for the complete deployment process. Model generation and project update occur before the board programming stage.
 
-Final STM32 firmware project:
+## 5. Generated STM32 Project
+
+Final generated/reference project:
 
 ```text
 ~/stm32ai-modelzoo-services/application_code/face_detection/STM32N6/
 ```
+
+The generated project contains the model-specific NN integration required by STM32N6:
+
+```text
+STAI runtime / generated network
+Post-processing
+Neural-ART / NPU configuration
+Camera pipeline
+External PSRAM / NOR support
+Model-specific headers and binaries
+```
+
+The application initializes the NPU and external memories, obtains the generated network input/output buffers and connects the camera NN pipeline directly to the network input.
+
+Typical runtime flow:
+
+```text
+Camera
+  ↓
+DCMIPP / Camera Pipeline
+  ↓
+nn_in
+  ↓
+stai_network_run()
+  ↓
+nn_out[]
+  ↓
+Face Detection Post-Process
+  ↓
+Application
+```
+
+## 6. Integrate into Our Project
+
+The generated Model Zoo project is used as the **reference AI implementation**.
+
+Instead of developing the final application directly inside the Model Zoo repository, copy the required model and AI integration files from:
+
+```text
+~/stm32ai-modelzoo-services/application_code/face_detection/STM32N6/
+```
+
+into our own STM32N6570-DK project.
+
+Main pieces to integrate:
+
+```text
+Generated STAI / network files
+Neural-ART / NPU support
+Model-specific headers and binaries
+Post-processing
+Camera pipeline
+Required BSP / memory configuration
+```
+
+Then integrate the NN flow into the existing application:
+
+```text
+Existing Application
+       +
+Camera Pipeline
+       +
+Generated AI Model
+       +
+NPU Initialization
+       +
+Post-Processing
+       ↓
+Final Project
+```
+
+This keeps the Model Zoo project as a reproducible reference while the actual application remains independent and under our own project structure.
