@@ -10,7 +10,7 @@
 extern DMA_HandleTypeDef handle_GPDMA1_Channel2 ;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel3 ;
 
-// *************Includes from nn project**********************
+// ************* NN and CAMERA INCLUDES *************
 #include "stai.h"
 #include "stai_network.h"
 #include "app_postprocess.h"
@@ -39,7 +39,59 @@ __attribute__((section(".psram_bss")))
 __attribute__((aligned(32)))
 static uint8_t camera_dummy_display_buffer[800 * 480 * 2];
 
+// ************* LCD INCLUDES ********************
+#include "stm32n6570_discovery_lcd.h"
+#include "stm32_lcd.h"
+
+#define LCD_FG_WIDTH  SCREEN_WIDTH
+#define LCD_FG_HEIGHT SCREEN_HEIGHT
+#define LCD_FG_FRAMEBUFFER_SIZE  (LCD_FG_WIDTH * LCD_FG_HEIGHT * 2)
+
+typedef struct
+{
+  uint32_t X0;
+  uint32_t Y0;
+  uint32_t XSize;
+  uint32_t YSize;
+} Rectangle_TypeDef;
+
+/* Lcd Background area */
+Rectangle_TypeDef lcd_bg_area = {
+#if ASPECT_RATIO_MODE == ASPECT_RATIO_CROP || ASPECT_RATIO_MODE == ASPECT_RATIO_FIT
+  .X0 = (LCD_FG_WIDTH - LCD_FG_HEIGHT) / 2,
+#else
+  .X0 = 0,
+#endif
+  .Y0 = 0,
+  .XSize = 0,
+  .YSize = 0,
+};
+
+/* Lcd Foreground area */
+Rectangle_TypeDef lcd_fg_area = {
+  .X0 = 0,
+  .Y0 = 0,
+  .XSize = LCD_FG_WIDTH,
+  .YSize = LCD_FG_HEIGHT,
+};
+
+/* Lcd Background Buffer */
+__attribute__ ((section (".psram_bss")))
+__attribute__ ((aligned (32)))
+static uint8_t lcd_bg_buffer[800 * 480 * 2];
+/* Lcd Foreground Buffer */
+__attribute__ ((section (".psram_bss")))
+__attribute__ ((aligned (32)))
+static uint8_t lcd_fg_buffer[2][LCD_FG_WIDTH * LCD_FG_HEIGHT * 2];
+static int lcd_fg_buffer_rd_idx;
+
+BSP_LCD_LayerConfig_t LayerConfig = {0};
+
+
+static void LCD_init(void);
+
 // **********************************
+
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -106,17 +158,15 @@ int main(void)
 
     CameraPipeline_Init(&camera_width, &camera_height, &pitch_nn);
 
-    CameraPipeline_DisplayPipe_Start(
-        camera_dummy_display_buffer,
-        DCMIPP_MODE_CONTINUOUS
-    );
+    LCD_init();
+
+    // Camera puts frames to buffer in continuous mode
+    CameraPipeline_DisplayPipe_Start(camera_dummy_display_buffer, DCMIPP_MODE_CONTINUOUS);
 
     CameraPipeline_IspUpdate();
 
-    CameraPipeline_NNPipe_Start(
-        (uint8_t *)nn_in,
-        DCMIPP_MODE_SNAPSHOT
-    );
+    // Camera buffer is sent to nn unit as snapshot mode since nn might not have same fps of camera
+    CameraPipeline_NNPipe_Start((uint8_t *)nn_in, DCMIPP_MODE_SNAPSHOT);
 
     USBPD_PreInitOs();
     MX_ThreadX_Init();
@@ -124,6 +174,35 @@ int main(void)
     while (1)
     {
     }
+}
+
+static void LCD_init(void)
+{
+  BSP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE);
+
+  /* Preview layer Init */
+  LayerConfig.X0          = lcd_bg_area.X0;
+  LayerConfig.Y0          = lcd_bg_area.Y0;
+  LayerConfig.X1          = lcd_bg_area.X0 + lcd_bg_area.XSize;
+  LayerConfig.Y1          = lcd_bg_area.Y0 + lcd_bg_area.YSize;
+  LayerConfig.PixelFormat = LCD_PIXEL_FORMAT_RGB565;
+  LayerConfig.Address     = (uint32_t) lcd_bg_buffer;
+
+  BSP_LCD_ConfigLayer(0, LTDC_LAYER_1, &LayerConfig);
+
+  LayerConfig.X0 = lcd_fg_area.X0;
+  LayerConfig.Y0 = lcd_fg_area.Y0;
+  LayerConfig.X1 = lcd_fg_area.X0 + lcd_fg_area.XSize;
+  LayerConfig.Y1 = lcd_fg_area.Y0 + lcd_fg_area.YSize;
+  LayerConfig.PixelFormat = LCD_PIXEL_FORMAT_ARGB4444;
+  LayerConfig.Address = (uint32_t) lcd_fg_buffer; /* External XSPI1 PSRAM */
+
+  BSP_LCD_ConfigLayer(0, LTDC_LAYER_2, &LayerConfig);
+  UTIL_LCD_SetFuncDriver(&LCD_Driver);
+  UTIL_LCD_SetLayer(LTDC_LAYER_2);
+  UTIL_LCD_Clear(0x00000000);
+  UTIL_LCD_SetFont(&Font20);
+  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
 }
 
 static void set_clk_sleep_mode(void)

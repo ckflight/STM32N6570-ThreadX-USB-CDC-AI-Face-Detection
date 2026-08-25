@@ -38,6 +38,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Model</locationURI>
 		</link>
 		<link>
+			<name>Utilities</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Utilities</locationURI>
+		</link>
+		<link>
 			<name>Middlewares/ai-postprocessing-wrapper</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Middlewares/ST/ai-postprocessing-wrapper</locationURI>
@@ -126,6 +131,11 @@
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_i2c_ex.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_i2c_ex.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_ltdc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_ltdc.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_pcd.c</name>
@@ -296,6 +306,11 @@
 			<name>Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_bus.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_bus.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_lcd.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_lcd.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_usbpd_pwr.c</name>

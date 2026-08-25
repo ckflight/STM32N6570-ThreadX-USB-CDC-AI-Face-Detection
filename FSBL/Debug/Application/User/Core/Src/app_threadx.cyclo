@@ -1,7 +1,7 @@
 ../Application/User/Core/Src/app_threadx.c:71:6:App_ThreadX_Init	11
 ../Application/User/Core/Src/app_threadx.c:108:6:MX_ThreadX_Init	1
 ../Application/User/Core/Src/app_threadx.c:114:13:AI_Task	2
-../Application/User/Core/Src/app_threadx.c:158:13:USB_TX_Task	6
-../Application/User/Core/Src/app_threadx.c:276:13:MATH_Task	3
-../Application/User/Core/Src/app_threadx.c:304:13:LED1_Task	1
-../Application/User/Core/Src/app_threadx.c:317:13:LED2_Task	1
+../Application/User/Core/Src/app_threadx.c:153:13:USB_TX_Task	6
+../Application/User/Core/Src/app_threadx.c:271:13:MATH_Task	3
+../Application/User/Core/Src/app_threadx.c:299:13:LED1_Task	1
+../Application/User/Core/Src/app_threadx.c:312:13:LED2_Task	1

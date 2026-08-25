@@ -9,6 +9,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Utilities/lcd/subdir.mk
 -include Model/STM32N6570-DK/subdir.mk
 -include Middlewares/usbx/UX\ Device\ CoreStack/subdir.mk
 -include Middlewares/usbx/UX\ Device\ Controllers/subdir.mk
@@ -91,8 +92,8 @@ all:
 main-build: STM32N6570_USBD_CDC_FACE_DETECT_FSBL.elf secondary-outputs
 
 # Tool invocations
-STM32N6570_USBD_CDC_FACE_DETECT_FSBL.elf STM32N6570_USBD_CDC_FACE_DETECT_FSBL.map: $(OBJS) $(USER_OBJS) /home/ck/Desktop/Workspace/STM32CubeIDE\ Workspace/STM32N6570_USBD_CDC_FACE_DETECT/FSBL/STM32N657X0HXQ_AXISRAM2_fsbl.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "STM32N6570_USBD_CDC_FACE_DETECT_FSBL.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m55 -T"/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/FSBL/STM32N657X0HXQ_AXISRAM2_fsbl.ld" --specs=nosys.specs -Wl,-Map="STM32N6570_USBD_CDC_FACE_DETECT_FSBL.map" -Wl,--gc-sections -static -Wl,--cmse-implib -Wl,--out-implib=./secure_nsclib.o -L../../Middlewares/ST/STM32_USBPD_Library/Core/lib --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+STM32N6570_USBD_CDC_FACE_DETECT_FSBL.elf STM32N6570_USBD_CDC_FACE_DETECT_FSBL.map: $(OBJS) $(USER_OBJS) /home/ck/Desktop/Workspace/STM32CubeIDE\ Workspace/STM32N6570-ThreadX-USB-CDC-AI-Face-Detection/FSBL/STM32N657X0HXQ_AXISRAM2_fsbl.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "STM32N6570_USBD_CDC_FACE_DETECT_FSBL.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m55 -T"/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570-ThreadX-USB-CDC-AI-Face-Detection/FSBL/STM32N657X0HXQ_AXISRAM2_fsbl.ld" --specs=nosys.specs -Wl,-Map="STM32N6570_USBD_CDC_FACE_DETECT_FSBL.map" -Wl,--gc-sections -static -Wl,--cmse-implib -Wl,--out-implib=./secure_nsclib.o -L../../Middlewares/ST/STM32_USBPD_Library/Core/lib --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -117,7 +118,7 @@ clean:
 	-@echo ' '
 
 post-build:
-	cd "/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570_USBD_CDC_FACE_DETECT/FSBL/Debug"
+	cd "/home/ck/Desktop/Workspace/STM32CubeIDE Workspace/STM32N6570-ThreadX-USB-CDC-AI-Face-Detection/FSBL/Debug"
 	echo y | /home/ck/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_SigningTool_CLI -bin "STM32N6570_USBD_CDC_FACE_DETECT_FSBL.bin" -nk -of 0x80000000 -t fsbl -o "STM32N6570_USBD_CDC_FACE_DETECT_FSBL-Trusted.bin" -hv 2.3 -dump "STM32N6570_USBD_CDC_FACE_DETECT_FSBL-Trusted.bin" -align
 	-@echo ' '
 

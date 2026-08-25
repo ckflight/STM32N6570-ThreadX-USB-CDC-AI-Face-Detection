@@ -53,4 +53,5 @@ Middlewares/usbx/UX\ Device\ Class\ CDC\ ACM \
 Middlewares/usbx/UX\ Device\ Controllers \
 Middlewares/usbx/UX\ Device\ CoreStack \
 Model/STM32N6570-DK \
+Utilities/lcd \
 
