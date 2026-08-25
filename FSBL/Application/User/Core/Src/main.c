@@ -103,6 +103,14 @@ static void SystemIsolation_Config(void);
 // #define UX_SLAVE_REQUEST_DATA_MAX_LENGTH 32768 is increased.
 // DMA is enabled hpcd_USB_OTG_HS1.Init.dma_enable = ENABLE;
 
+
+
+// Önemli not: network weight vs bir dataları flasha yazınca app çalışıyor.
+// python3.12 stm32ai_main.py (user_config.yml oluşturunca) bu kod flasha yazıyor.
+// ai kodunun flashtan çalışması için face_detection/STM32N6/FSBL/ai_fsbl.hex yaz bu face detect kodunu flashlıyor bunu henüz açamadı.
+// network_data.hex de yazmak lazım
+// projenin hex dosyasını da doğru adrese yazmak lazım
+
 int main(void)
 {
 
