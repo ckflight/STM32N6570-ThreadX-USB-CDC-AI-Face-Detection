@@ -105,6 +105,7 @@ static void SystemIsolation_Config(void);
 
 int main(void)
 {
+
     uint32_t nn_in_len = 0;
     int32_t nn_out_len[STAI_NETWORK_OUT_NUM] = {0};
 
