@@ -35,10 +35,6 @@ static void NPUCache_config(void);
 void NeuralNetwork_run(void);
 static void set_clk_sleep_mode(void);
 
-__attribute__((section(".psram_bss")))
-__attribute__((aligned(32)))
-static uint8_t camera_dummy_display_buffer[800 * 480 * 2];
-
 // ************* LCD INCLUDES ********************
 #include "stm32n6570_discovery_lcd.h"
 #include "stm32_lcd.h"
@@ -89,6 +85,7 @@ BSP_LCD_LayerConfig_t LayerConfig = {0};
 
 
 static void LCD_init(void);
+static void LCD_TestOverlay(void);
 
 // **********************************
 
@@ -152,16 +149,33 @@ int main(void)
 
     app_postprocess_init(&pp_params, &info);
 
-    uint32_t camera_width = 0;
-    uint32_t camera_height = 0;
     uint32_t pitch_nn = 0;
-
-    CameraPipeline_Init(&camera_width, &camera_height, &pitch_nn);
+    CameraPipeline_Init(&lcd_bg_area.XSize, &lcd_bg_area.YSize, &pitch_nn);
 
     LCD_init();
 
+    //LCD_TestOverlay();
+
+    UTIL_LCD_Clear(0x00000000);
+
+    UTIL_LCD_SetFont(&Font20);
+    UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
+
+    UTIL_LCD_DisplayStringAt(
+        10,
+        10,
+        (uint8_t *)"FACE DETECTION",
+        LEFT_MODE
+    );
+
+    /* CPU cache -> PSRAM, so LTDC sees updated pixels */
+    SCB_CleanDCache_by_Addr(
+        (uint32_t *)lcd_fg_buffer[0],
+        LCD_FG_FRAMEBUFFER_SIZE
+    );
+
     // Camera puts frames to buffer in continuous mode
-    CameraPipeline_DisplayPipe_Start(camera_dummy_display_buffer, DCMIPP_MODE_CONTINUOUS);
+    CameraPipeline_DisplayPipe_Start(lcd_bg_buffer, DCMIPP_MODE_CONTINUOUS);
 
     CameraPipeline_IspUpdate();
 
@@ -174,6 +188,27 @@ int main(void)
     while (1)
     {
     }
+}
+
+static void LCD_TestOverlay(void)
+{
+    HAL_LTDC_SetAddress_NoReload(
+        &hlcd_ltdc,
+        (uint32_t)lcd_fg_buffer[lcd_fg_buffer_rd_idx],
+        LTDC_LAYER_2
+    );
+
+    UTIL_LCD_Clear(0x00000000);
+
+    UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
+
+    UTIL_LCD_DisplayStringAt(10, 10, (uint8_t *)"FACE DETECTION", LEFT_MODE);
+
+    SCB_CleanDCache_by_Addr((uint32_t *)lcd_fg_buffer[lcd_fg_buffer_rd_idx], LCD_FG_FRAMEBUFFER_SIZE);
+
+    HAL_LTDC_ReloadLayer(&hlcd_ltdc, LTDC_RELOAD_VERTICAL_BLANKING, LTDC_LAYER_2);
+
+    lcd_fg_buffer_rd_idx = 1 - lcd_fg_buffer_rd_idx;
 }
 
 static void LCD_init(void)
@@ -203,6 +238,7 @@ static void LCD_init(void)
   UTIL_LCD_Clear(0x00000000);
   UTIL_LCD_SetFont(&Font20);
   UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
+
 }
 
 static void set_clk_sleep_mode(void)
@@ -224,6 +260,8 @@ static void set_clk_sleep_mode(void)
     __HAL_RCC_AXISRAM4_MEM_CLK_SLEEP_ENABLE();
     __HAL_RCC_AXISRAM5_MEM_CLK_SLEEP_ENABLE();
     __HAL_RCC_AXISRAM6_MEM_CLK_SLEEP_ENABLE();
+
+    __HAL_RCC_DMA2D_CLK_SLEEP_ENABLE();
 }
 
 void npu_cache_enable_clocks_and_reset(void)
@@ -492,116 +530,6 @@ void SystemClock_Config(void)
         Error_Handler();
     }
 }
-//void SystemClock_Config(void)
-//{
-//  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-//  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-//  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-//
-//  /** Configure the System Power Supply
-//  */
-//  if (HAL_PWREx_ConfigSupply(PWR_EXTERNAL_SOURCE_SUPPLY) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//
-//  /** Configure the main internal regulator output voltage
-//  */
-//  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//
-//  /* Enable HSI */
-//  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-//  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-//  RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
-//  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-//  RCC_OscInitStruct.PLL1.PLLState = RCC_PLL_NONE;
-//  RCC_OscInitStruct.PLL2.PLLState = RCC_PLL_NONE;
-//  RCC_OscInitStruct.PLL3.PLLState = RCC_PLL_NONE;
-//  RCC_OscInitStruct.PLL4.PLLState = RCC_PLL_NONE;
-//  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//
-//  /* Wait HSE stabilization time before its selection as PLL source. */
-//  HAL_Delay(HSE_STARTUP_TIMEOUT);
-//
-//  /** Initializes TIMPRE when TIM is used as Systick Clock Source
-//  */
-//  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_TIM;
-//  PeriphClkInitStruct.TIMPresSelection = RCC_TIMPRES_DIV1;
-//  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//
-//  /** Get current CPU/System buses clocks configuration and if necessary switch
-// to intermediate HSI clock to ensure target clock can be set
-//  */
-//  HAL_RCC_GetClockConfig(&RCC_ClkInitStruct);
-//  if ((RCC_ClkInitStruct.CPUCLKSource == RCC_CPUCLKSOURCE_IC1) ||
-//     (RCC_ClkInitStruct.SYSCLKSource == RCC_SYSCLKSOURCE_IC2_IC6_IC11))
-//  {
-//    RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_CPUCLK | RCC_CLOCKTYPE_SYSCLK);
-//    RCC_ClkInitStruct.CPUCLKSource = RCC_CPUCLKSOURCE_HSI;
-//    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-//    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct) != HAL_OK)
-//    {
-//      /* Initialization Error */
-//      Error_Handler();
-//    }
-//  }
-//
-//  /** Initializes the RCC Oscillators according to the specified parameters
-//  * in the RCC_OscInitTypeDef structure.
-//  */
-//  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-//  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS_DIGITAL;
-//  RCC_OscInitStruct.PLL1.PLLState = RCC_PLL_ON;
-//  RCC_OscInitStruct.PLL1.PLLSource = RCC_PLLSOURCE_HSE;
-//  RCC_OscInitStruct.PLL1.PLLM = 3;
-//  RCC_OscInitStruct.PLL1.PLLN = 75;
-//  RCC_OscInitStruct.PLL1.PLLFractional = 0;
-//  RCC_OscInitStruct.PLL1.PLLP1 = 1;
-//  RCC_OscInitStruct.PLL1.PLLP2 = 1;
-//  RCC_OscInitStruct.PLL2.PLLState = RCC_PLL_NONE;
-//  RCC_OscInitStruct.PLL3.PLLState = RCC_PLL_NONE;
-//  RCC_OscInitStruct.PLL4.PLLState = RCC_PLL_NONE;
-//  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//
-//  /** Initializes the CPU, AHB and APB buses clocks
-//  */
-//  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_CPUCLK|RCC_CLOCKTYPE_HCLK
-//                              |RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1
-//                              |RCC_CLOCKTYPE_PCLK2|RCC_CLOCKTYPE_PCLK5
-//                              |RCC_CLOCKTYPE_PCLK4;
-//  RCC_ClkInitStruct.CPUCLKSource = RCC_CPUCLKSOURCE_IC1;
-//  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_IC2_IC6_IC11;
-//  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV4;
-//  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV1;
-//  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
-//  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
-//  RCC_ClkInitStruct.APB5CLKDivider = RCC_APB5_DIV1;
-//  RCC_ClkInitStruct.IC1Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-//  RCC_ClkInitStruct.IC1Selection.ClockDivider = 2;
-//  RCC_ClkInitStruct.IC2Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-//  RCC_ClkInitStruct.IC2Selection.ClockDivider = 3;
-//  RCC_ClkInitStruct.IC6Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-//  RCC_ClkInitStruct.IC6Selection.ClockDivider = 3;
-//  RCC_ClkInitStruct.IC11Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-//  RCC_ClkInitStruct.IC11Selection.ClockDivider = 3;
-//
-//  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//}
 
 /**
   * @brief RIF Initialization Function
@@ -648,7 +576,42 @@ static void SystemIsolation_Config(void)
       RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV
   );
 
+  HAL_RIF_RIMC_ConfigMasterAttributes(
+      RIF_MASTER_INDEX_LTDC1,
+      &RIMC_master
+  );
+
+  HAL_RIF_RIMC_ConfigMasterAttributes(
+      RIF_MASTER_INDEX_LTDC2,
+      &RIMC_master
+  );
+
+  HAL_RIF_RISC_SetSlaveSecureAttributes(
+      RIF_RISC_PERIPH_INDEX_LTDC,
+      RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV
+  );
+
+  HAL_RIF_RISC_SetSlaveSecureAttributes(
+      RIF_RISC_PERIPH_INDEX_LTDCL1,
+      RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV
+  );
+
+  HAL_RIF_RISC_SetSlaveSecureAttributes(
+      RIF_RISC_PERIPH_INDEX_LTDCL2,
+      RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV
+  );
+
   HAL_RIF_RIMC_ConfigMasterAttributes(RIF_MASTER_INDEX_OTG1, &RIMC_master);
+
+  HAL_RIF_RIMC_ConfigMasterAttributes(
+      RIF_MASTER_INDEX_DMA2D,
+      &RIMC_master
+  );
+
+  HAL_RIF_RISC_SetSlaveSecureAttributes(
+      RIF_RISC_PERIPH_INDEX_DMA2D,
+      RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV
+  );
 
   /*RISUP configuration*/
   HAL_RIF_RISC_SetSlaveSecureAttributes(RIF_RISC_PERIPH_INDEX_OTG1HS , RIF_ATTRIBUTE_SEC | RIF_ATTRIBUTE_PRIV);
