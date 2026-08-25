@@ -58,14 +58,6 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : PC0 PC2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_2;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF11_SDMMC2;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
   /*Configure GPIO pin : USER_BUTTON_Pin */
   GPIO_InitStruct.Pin = USER_BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -79,12 +71,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(LED_GREEN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : SD_DETECT_Pin */
-  GPIO_InitStruct.Pin = SD_DETECT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(SD_DETECT_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : LED_RED_Pin */
   GPIO_InitStruct.Pin = LED_RED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -94,9 +80,6 @@ void MX_GPIO_Init(void)
 
   /*Configure the EXTI line attribute */
   HAL_EXTI_ConfigLineAttributes(EXTI_LINE_13, EXTI_LINE_SEC);
-
-  /*Configure the EXTI line attribute */
-  HAL_EXTI_ConfigLineAttributes(EXTI_LINE_12, EXTI_LINE_SEC);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(USER_BUTTON_EXTI_IRQn, 15, 0);

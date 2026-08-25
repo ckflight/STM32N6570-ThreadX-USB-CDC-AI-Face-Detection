@@ -86,21 +86,14 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 void MX_USB1_OTG_HS_PCD_Init(void);
-void MX_USART1_UART_Init(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define USART1_TX_Pin GPIO_PIN_5
-#define USART1_TX_GPIO_Port GPIOE
-#define USART1_RX_Pin GPIO_PIN_6
-#define USART1_RX_GPIO_Port GPIOE
 #define USER_BUTTON_Pin GPIO_PIN_13
 #define USER_BUTTON_GPIO_Port GPIOC
 #define USER_BUTTON_EXTI_IRQn EXTI13_IRQn
 #define LED_GREEN_Pin GPIO_PIN_1
 #define LED_GREEN_GPIO_Port GPIOO
-#define SD_DETECT_Pin GPIO_PIN_12
-#define SD_DETECT_GPIO_Port GPION
 #define LED_RED_Pin GPIO_PIN_10
 #define LED_RED_GPIO_Port GPIOG
 
