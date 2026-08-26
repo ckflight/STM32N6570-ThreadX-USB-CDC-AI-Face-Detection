@@ -78,15 +78,12 @@ static uint8_t lcd_bg_buffer[800 * 480 * 2];
 /* Lcd Foreground Buffer */
 __attribute__ ((section (".psram_bss")))
 __attribute__ ((aligned (32)))
-static uint8_t lcd_fg_buffer[2][LCD_FG_WIDTH * LCD_FG_HEIGHT * 2];
-static int lcd_fg_buffer_rd_idx;
+uint8_t lcd_fg_buffer[2][LCD_FG_WIDTH * LCD_FG_HEIGHT * 2];
 
 BSP_LCD_LayerConfig_t LayerConfig = {0};
 
 
 static void LCD_init(void);
-static void LCD_TestOverlay(void);
-
 // **********************************
 
 
@@ -163,26 +160,6 @@ int main(void)
 
     LCD_init();
 
-    //LCD_TestOverlay();
-
-    UTIL_LCD_Clear(0x00000000);
-
-    UTIL_LCD_SetFont(&Font20);
-    UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
-
-    UTIL_LCD_DisplayStringAt(
-        10,
-        10,
-        (uint8_t *)"FACE DETECTION",
-        LEFT_MODE
-    );
-
-    /* CPU cache -> PSRAM, so LTDC sees updated pixels */
-    SCB_CleanDCache_by_Addr(
-        (uint32_t *)lcd_fg_buffer[0],
-        LCD_FG_FRAMEBUFFER_SIZE
-    );
-
     // Camera puts frames to buffer in continuous mode
     CameraPipeline_DisplayPipe_Start(lcd_bg_buffer, DCMIPP_MODE_CONTINUOUS);
 
@@ -197,27 +174,6 @@ int main(void)
     while (1)
     {
     }
-}
-
-static void LCD_TestOverlay(void)
-{
-    HAL_LTDC_SetAddress_NoReload(
-        &hlcd_ltdc,
-        (uint32_t)lcd_fg_buffer[lcd_fg_buffer_rd_idx],
-        LTDC_LAYER_2
-    );
-
-    UTIL_LCD_Clear(0x00000000);
-
-    UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
-
-    UTIL_LCD_DisplayStringAt(10, 10, (uint8_t *)"FACE DETECTION", LEFT_MODE);
-
-    SCB_CleanDCache_by_Addr((uint32_t *)lcd_fg_buffer[lcd_fg_buffer_rd_idx], LCD_FG_FRAMEBUFFER_SIZE);
-
-    HAL_LTDC_ReloadLayer(&hlcd_ltdc, LTDC_RELOAD_VERTICAL_BLANKING, LTDC_LAYER_2);
-
-    lcd_fg_buffer_rd_idx = 1 - lcd_fg_buffer_rd_idx;
 }
 
 static void LCD_init(void)

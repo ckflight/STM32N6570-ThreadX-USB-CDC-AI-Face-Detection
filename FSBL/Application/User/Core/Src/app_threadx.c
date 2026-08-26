@@ -45,10 +45,16 @@ static TX_THREAD ai_thread;
 static UCHAR ai_stack[4096];
 static VOID AI_Task(ULONG arg);
 
+//****************** AI TASK *************
+static TX_THREAD lcd_text_thread;
+static UCHAR lcd_text_stack[2048];
+static VOID LCD_Text_Task(ULONG arg);
+
 #include "stai.h"
 #include "stai_network.h"
 #include "app_postprocess.h"
 #include "app_camerapipeline.h"
+#include "stm32_lcd.h"
 
 extern stai_size number_output;
 extern stai_ptr nn_out[STAI_NETWORK_OUT_NUM];
@@ -63,8 +69,14 @@ extern stai_ptr nn_in;
 __attribute__((aligned(32)))
 static UCHAR usb_msg[64];
 
-volatile uint32_t ai_result_ready = 0;
 volatile int32_t ai_face_count = 0;
+volatile uint32_t ai_result_ready = 0;
+volatile uint32_t lcd_result_ready = 0;
+
+#define LCD_FG_WIDTH  SCREEN_WIDTH
+#define LCD_FG_HEIGHT SCREEN_HEIGHT
+#define LCD_FG_FRAMEBUFFER_SIZE  (LCD_FG_WIDTH * LCD_FG_HEIGHT * 2)
+extern uint8_t lcd_fg_buffer[2][LCD_FG_WIDTH * LCD_FG_HEIGHT * 2];
 
 extern void NeuralNetwork_run(void);
 
@@ -102,6 +114,9 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
     ret = tx_thread_create(&ai_thread, "AI", AI_Task, 0, ai_stack, sizeof(ai_stack), 10, 10, 1, TX_AUTO_START);
     if (ret != TX_SUCCESS) return ret;
 
+    ret = tx_thread_create(&lcd_text_thread, "LCD TEXT", LCD_Text_Task, 0, lcd_text_stack, sizeof(lcd_text_stack), 20, 20, 1, TX_AUTO_START);
+    if (ret != TX_SUCCESS) return ret;
+
     return TX_SUCCESS;
 }
 
@@ -110,6 +125,41 @@ void MX_ThreadX_Init(void)
     tx_kernel_enter();
 }
 
+
+static VOID LCD_Text_Task(ULONG arg){
+
+	UX_PARAMETER_NOT_USED(arg);
+
+	char text[32];
+
+	int32_t face_count;
+
+	while(1){
+
+		if(lcd_result_ready == 0){
+			tx_thread_sleep(1);
+			continue;
+		}
+
+		face_count = ai_face_count;
+
+	    UTIL_LCD_Clear(0x00000000);
+
+	    UTIL_LCD_SetFont(&Font20);
+	    UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_LIGHTGREEN);
+
+	    snprintf(text, sizeof(text), "FACE DETECTED: %ld", (long)face_count);
+
+	    UTIL_LCD_DisplayStringAt(10, 10, (uint8_t *)text, LEFT_MODE);
+
+	    /* CPU cache -> PSRAM, so LTDC sees updated pixels */
+	    SCB_CleanDCache_by_Addr((uint32_t *)lcd_fg_buffer[0], LCD_FG_FRAMEBUFFER_SIZE);
+
+	    lcd_result_ready = 0;
+	}
+
+
+}
 
 static VOID AI_Task(ULONG arg)
 {
@@ -135,15 +185,14 @@ static VOID AI_Task(ULONG arg)
 
         /* Sonucu USB task'a bırak */
         ai_face_count = pp_output.nb_detect;
+
         ai_result_ready = 1;
+        lcd_result_ready = 1;
 
         /* Sonraki kamera snapshot'ını başlat */
         CameraPipeline_IspUpdate();
 
-        CameraPipeline_NNPipe_Start(
-            (uint8_t *)nn_in,
-            DCMIPP_MODE_SNAPSHOT
-        );
+        CameraPipeline_NNPipe_Start((uint8_t *)nn_in, DCMIPP_MODE_SNAPSHOT);
 
         HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
 
@@ -169,13 +218,7 @@ static VOID USB_TX_Task(ULONG arg)
         {
             ai_result_ready = 0;
 
-            int len = snprintf(
-                (char *)usb_msg,
-                sizeof(usb_msg),
-                "AI=%lu Faces=%ld\r\n",
-                (unsigned long)ai_task_counter,
-                (long)ai_face_count
-            );
+            int len = snprintf((char *)usb_msg, sizeof(usb_msg), "AI=%lu Faces=%ld\r\n", (unsigned long)ai_task_counter, (long)ai_face_count);
 
             /*
              * CPU snprintf ile cache'e yazdı.
@@ -184,17 +227,9 @@ static VOID USB_TX_Task(ULONG arg)
              */
             uint32_t clean_len = ((uint32_t)len + 31U) & ~31U;
 
-            SCB_CleanDCache_by_Addr(
-                (uint32_t *)usb_msg,
-                clean_len
-            );
+            SCB_CleanDCache_by_Addr((uint32_t *)usb_msg, clean_len);
 
-            status = ux_device_class_cdc_acm_write(
-                cdc_acm,
-                usb_msg,
-                (ULONG)len,
-                &actual_length
-            );
+            status = ux_device_class_cdc_acm_write(cdc_acm, usb_msg, (ULONG)len, &actual_length);
 
             if (status == UX_SUCCESS)
             {
@@ -208,32 +243,7 @@ static VOID USB_TX_Task(ULONG arg)
     }
 }
 
-//static VOID AI_Task(ULONG arg)
-//{
-//    UX_PARAMETER_NOT_USED(arg);
-//
-//    while (1)
-//    {
-//        if (cameraFrameReceived == 0)
-//        {
-//            tx_thread_sleep(1);
-//            continue;
-//        }
-//
-//        cameraFrameReceived = 0;
-//
-//        NeuralNetwork_run();
-//
-//        app_postprocess_run((void **)nn_out, number_output, &pp_output, &pp_params);
-//
-//        ai_task_counter++;
-//
-//        CameraPipeline_IspUpdate();
-//
-//        CameraPipeline_NNPipe_Start((uint8_t *)nn_in, DCMIPP_MODE_SNAPSHOT);
-//    }
-//}
-
+// USB Throughput test function
 //static VOID USB_TX_Task(ULONG arg)
 //{
 //    ULONG actual_length;
@@ -249,12 +259,7 @@ static VOID USB_TX_Task(ULONG arg)
 //            continue;
 //        }
 //
-//        status = ux_device_class_cdc_acm_write(
-//            cdc_acm,
-//            usb_tx_buffer,
-//            USB_TX_BUFFER_SIZE,
-//            &actual_length
-//        );
+//        status = ux_device_class_cdc_acm_write(cdc_acm, usb_tx_buffer, USB_TX_BUFFER_SIZE, &actual_length);
 //
 //        if (status == UX_SUCCESS)
 //        {
