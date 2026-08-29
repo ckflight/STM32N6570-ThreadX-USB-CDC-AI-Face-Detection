@@ -117,14 +117,16 @@ void CameraPipeline_Init(uint32_t *lcd_bg_width, uint32_t *lcd_bg_height, uint32
   int ret;
   CMW_CameraInit_t cam_conf;
 
-  cam_conf.width = CAMERA_WIDTH;
-  cam_conf.height = CAMERA_HEIGHT;
-  cam_conf.fps = CAMERA_FPS;
+  cam_conf.width 	= CAMERA_WIDTH;
+  cam_conf.height 	= CAMERA_HEIGHT;
+  cam_conf.fps 		= CAMERA_FPS;
   cam_conf.mirror_flip = CAMERA_FLIP;
 
   ret = CMW_CAMERA_Init(&cam_conf, NULL);
   assert(ret == CMW_ERROR_NONE);
+
   DCMIPP_PipeInitDisplay(&cam_conf, lcd_bg_width, lcd_bg_height);
+
   DCMIPP_PipeInitNn(pitch_nn);
 }
 

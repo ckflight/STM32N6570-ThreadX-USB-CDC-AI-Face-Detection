@@ -130,9 +130,7 @@ static VOID LCD_Text_Task(ULONG arg){
 
 	UX_PARAMETER_NOT_USED(arg);
 
-	char text[32];
-
-	int32_t face_count;
+	char text_buffer[256];
 
 	while(1){
 
@@ -141,16 +139,31 @@ static VOID LCD_Text_Task(ULONG arg){
 			continue;
 		}
 
-		face_count = ai_face_count;
-
 	    UTIL_LCD_Clear(0x00000000);
-
-	    UTIL_LCD_SetFont(&Font20);
+	    UTIL_LCD_SetFont(&Font16);
 	    UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_LIGHTGREEN);
 
-	    snprintf(text, sizeof(text), "FACE DETECTED: %ld", (long)face_count);
+	    if(pp_output.nb_detect){
+			for(int i = 0; i < pp_output.nb_detect; i++){
 
-	    UTIL_LCD_DisplayStringAt(10, 10, (uint8_t *)text, LEFT_MODE);
+				snprintf(text_buffer, sizeof(text_buffer),
+						"Face %d: C=%.2f X=%.2f Y=%.2f W=%.2f H=%.2f",
+						i+1,
+						pp_output.pOutBuff[i].conf,
+						pp_output.pOutBuff[i].x_center * SCREEN_WIDTH,
+						pp_output.pOutBuff[i].y_center * SCREEN_HEIGHT,
+						pp_output.pOutBuff[i].width,
+						pp_output.pOutBuff[i].height
+				);
+
+				UTIL_LCD_DisplayStringAt(10, 10, (uint8_t *)text_buffer, LEFT_MODE);
+
+			}
+	    }
+	    else{
+	    	snprintf(text_buffer, sizeof(text_buffer), "No face detected");
+	    	UTIL_LCD_DisplayStringAt(10, 10, (uint8_t *)text_buffer, LEFT_MODE);
+	    }
 
 	    /* CPU cache -> PSRAM, so LTDC sees updated pixels */
 	    SCB_CleanDCache_by_Addr((uint32_t *)lcd_fg_buffer[0], LCD_FG_FRAMEBUFFER_SIZE);
@@ -182,9 +195,6 @@ static VOID AI_Task(ULONG arg)
         app_postprocess_run((void **)nn_out, number_output, &pp_output, &pp_params);
 
         ai_task_counter++;
-
-        /* Sonucu USB task'a bırak */
-        ai_face_count = pp_output.nb_detect;
 
         ai_result_ready = 1;
         lcd_result_ready = 1;

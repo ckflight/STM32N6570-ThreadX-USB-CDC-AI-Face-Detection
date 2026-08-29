@@ -75,6 +75,7 @@ Rectangle_TypeDef lcd_fg_area = {
 __attribute__ ((section (".psram_bss")))
 __attribute__ ((aligned (32)))
 static uint8_t lcd_bg_buffer[800 * 480 * 2];
+
 /* Lcd Foreground Buffer */
 __attribute__ ((section (".psram_bss")))
 __attribute__ ((aligned (32)))
@@ -156,6 +157,7 @@ int main(void)
     app_postprocess_init(&pp_params, &info);
 
     uint32_t pitch_nn = 0;
+
     CameraPipeline_Init(&lcd_bg_area.XSize, &lcd_bg_area.YSize, &pitch_nn);
 
     LCD_init();

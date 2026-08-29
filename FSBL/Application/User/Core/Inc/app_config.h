@@ -24,12 +24,12 @@
 #define USE_DCACHE
 
 /*Defines: CMW_MIRRORFLIP_NONE; CMW_MIRRORFLIP_FLIP; CMW_MIRRORFLIP_MIRROR; CMW_MIRRORFLIP_FLIP_MIRROR;*/
-#define CAMERA_FLIP CMW_MIRRORFLIP_NONE
+#define CAMERA_FLIP CMW_MIRRORFLIP_MIRROR//CMW_MIRRORFLIP_NONE
 
 #define ASPECT_RATIO_CROP       (1) /* Crop both pipes to nn input aspect ratio; Original aspect ratio kept */
 #define ASPECT_RATIO_FIT        (2) /* Resize both pipe to NN input aspect ratio; Original aspect ratio not kept */
 #define ASPECT_RATIO_FULLSCREEN (3) /* Resize camera image to NN input size and display a maximized image. See Doc/Build-Options.md#aspect-ratio-mode */
-#define ASPECT_RATIO_MODE ASPECT_RATIO_CROP
+#define ASPECT_RATIO_MODE 		ASPECT_RATIO_CROP
 
 /* Model Related Info */
 #define POSTPROCESS_TYPE    POSTPROCESS_FD_BLAZEFACE_UI
@@ -45,7 +45,7 @@
 #define AI_FD_BLAZEFACE_PP_OUT_0_NB_BOXES    (512)
 #define AI_FD_BLAZEFACE_PP_OUT_1_NB_BOXES    (384)
 #define AI_FD_BLAZEFACE_PP_MAX_BOXES_LIMIT   (3)
-#define AI_FD_BLAZEFACE_PP_CONF_THRESHOLD    (0.8)
+#define AI_FD_BLAZEFACE_PP_CONF_THRESHOLD    (0.65)
 #define AI_FD_BLAZEFACE_PP_IOU_THRESHOLD     (0.5)
 
 /* Display */
